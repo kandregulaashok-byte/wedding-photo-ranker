@@ -1,0 +1,107 @@
+
+  WEDDING PHOTO RANKER — HOW TO USE (Windows)
+  =============================================
+
+  ┌─────────────────────────────────────────────────────┐
+  │  YOU ONLY NEED TO DO 3 THINGS:                      │
+  │                                                     │
+  │  1. Install Python  (one time only)                 │
+  │  2. Plug in your hard disk                          │
+  │  3. Double-click  DOUBLE_CLICK_TO_RUN.bat           │
+  └─────────────────────────────────────────────────────┘
+
+
+  STEP 1 — Install Python (one time only)
+  ─────────────────────────────────────────
+  1. Open Chrome or Edge
+  2. Go to:  https://www.python.org/downloads/
+  3. Click the big "Download Python" button
+  4. Open the downloaded file
+  5. !! IMPORTANT !!  Tick the checkbox that says:
+       "Add Python to PATH"   <-- must tick this!
+  6. Click "Install Now"
+  7. Done. You only do this once.
+
+
+  STEP 2 — Plug in your Wedding Hard Disk
+  ─────────────────────────────────────────
+  - Connect the hard disk to your Windows laptop via USB
+  - Open File Explorer (Windows key + E)
+  - Look at "This PC" — note the drive letter
+      Example:  Backup Drive (D:)  or  WeddingDisk (E:)
+  - Your path will be:  D:\   or   E:\   etc.
+
+
+  STEP 3 — Double-click DOUBLE_CLICK_TO_RUN.bat
+  ───────────────────────────────────────────────
+  - A black window will open — this is normal
+  - It will automatically install all needed tools
+    (first time only, needs internet — takes ~2 mins)
+  - Then it will ask you:
+
+      Paste the path here and press Enter:
+
+  - Type your drive letter, for example:
+      D:\
+      E:\WeddingPhotos
+      F:\DCIM
+
+  - Press Enter and wait.
+
+
+  WHAT HAPPENS NEXT
+  ──────────────────
+  The program will:
+    - Scan every folder automatically
+    - Score every single photo
+    - Remove duplicate/burst shots
+    - Rank ALL photos from best to worst
+    - Copy them to your Desktop
+
+  On your Desktop you will find a new folder:
+    Wedding_Best_Photos_Ranked\
+
+  Inside that folder:
+    Rank_0001_Score98_DSC_0234.CR2   <- BEST photo
+    Rank_0002_Score95_DSC_0012.NEF
+    Rank_0003_Score93_IMG_4521.JPG
+    Rank_0004_Score91_...
+    ...  (ALL your photos, ranked best to worst)
+    RANKING_REPORT.txt               <- detailed scores
+    gallery.html                     <- open in browser
+
+
+  HOW LONG DOES IT TAKE?
+  ───────────────────────
+    ~500 photos  →  about 3-5 minutes
+    ~2000 photos →  about 10-15 minutes
+    ~5000 photos →  about 30-40 minutes
+  (RAW files take longer than JPEGs — this is normal)
+
+
+  FORMATS SUPPORTED
+  ──────────────────
+    Canon    :  .CR2  .CR3
+    Nikon    :  .NEF  .NRW
+    Sony     :  .ARW  .SRF  .SR2
+    Fujifilm :  .RAF
+    Olympus  :  .ORF
+    Panasonic:  .RW2  .RAW
+    Pentax   :  .PEF  .PTX
+    Samsung  :  .SRW
+    Leica    :  .DNG  .RWL
+    iPhone   :  .HEIC
+    Standard :  .JPG  .JPEG  .PNG  .TIFF
+
+
+  SOMETHING WENT WRONG?
+  ──────────────────────
+  - Take a screenshot of the black window
+  - Share it with your tech team member
+
+
+  PRIVACY
+  ────────
+  100% local. Nothing is uploaded.
+  No internet needed after first setup.
+  Your photos never leave your computer.
