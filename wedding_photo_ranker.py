@@ -1,26 +1,22 @@
 """
-Wedding Photo Ranker - DSLR Full Edition
+Wedding Photo Ranker - JPEG Only Edition
 ==========================================
-Supports ALL formats:
-  RAW  : .CR2 .CR3 .NEF .NRW .ARW .SRF .SR2 .RAF
-         .ORF .RW2 .RAW .PEF .PTX .SRW .DNG .RWL
-  JPEG : .JPG .JPEG
-  Other: .PNG .TIFF .BMP .WEBP .HEIC
+Scans, scores and ranks all JPG/JPEG photos from your hard disk.
+No RAW files. Fast and simple.
 
 What it does:
   1. Scans every sub-folder on your hard disk
-  2. Reads ALL 20,000 photos (RAW + JPEG)
-  3. Scores each photo (sharpness, exposure, faces, color, contrast)
-  4. Removes duplicate / burst shots automatically
-  5. Copies ALL photos ranked to Desktop\Wedding_Best_Photos_Ranked\
-     Rank_0001_Score98_DSC_0012.CR2   (best first)
-  6. Opens a visual gallery in your browser
+  2. Scores each photo (sharpness, exposure, faces, color, contrast)
+  3. Removes duplicate / burst shots automatically
+  4. Copies ALL photos ranked to Desktop\Wedding_Best_Photos_Ranked\
+     Rank_0001_Score98_photo.jpg  (best first)
+  5. Opens a visual gallery in your browser
 """
 
 import os, sys, shutil, warnings
 warnings.filterwarnings("ignore")
 
-# ── Auto-install all required packages ───────────────────
+# ── Auto-install only what is needed ─────────────────────
 def pip_install(pkg, import_as=None):
     import importlib, subprocess
     try:
@@ -38,49 +34,24 @@ pip_install("Pillow",        "PIL")
 pip_install("imagehash")
 pip_install("numpy")
 pip_install("tqdm")
-pip_install("rawpy")          # reads ALL DSLR RAW formats
-
-# HEIC support
-try:
-    pip_install("pillow-heif", "pillow_heif")
-    from pillow_heif import register_heif_opener
-    register_heif_opener()
-    HEIC_OK = True
-except Exception:
-    HEIC_OK = False
 
 import cv2
 import numpy as np
-import rawpy
 import imagehash
 from PIL import Image
 from tqdm import tqdm
 from pathlib import Path
 from datetime import datetime
 
-# ── Supported extensions ──────────────────────────────────
-RAW_EXTS = {
-    ".cr2", ".cr3",           # Canon
-    ".nef", ".nrw",           # Nikon
-    ".arw", ".srf", ".sr2",   # Sony
-    ".raf",                   # Fujifilm
-    ".orf",                   # Olympus
-    ".rw2", ".raw",           # Panasonic
-    ".pef", ".ptx",           # Pentax
-    ".srw",                   # Samsung
-    ".rwl", ".dng",           # Leica / Universal
-}
-STD_EXTS = {".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif", ".webp"}
-if HEIC_OK:
-    STD_EXTS.update({".heic", ".heif"})
-ALL_EXTS = RAW_EXTS | STD_EXTS
+# ── JPEG only ─────────────────────────────────────────────
+SUPPORTED_EXTS = {".jpg", ".jpeg"}
 
 # ── Welcome ───────────────────────────────────────────────
 os.system("cls")
-print("=" * 58)
-print("   WEDDING PHOTO RANKER  -  Full DSLR Edition (Windows)")
-print("=" * 58)
-print("\n  Supports: RAW (14k) + JPEG (6k) = all 20,000 photos\n")
+print("=" * 55)
+print("   WEDDING PHOTO RANKER  -  JPEG Only (Windows)")
+print("=" * 55)
+print("\n  Supports: .JPG and .JPEG files only\n")
 
 while True:
     raw_input = input(
@@ -100,30 +71,14 @@ OUTPUT_DIR = Path.home() / "Desktop" / "Wedding_Best_Photos_Ranked"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 print(f"  Results will be saved to:\n  {OUTPUT_DIR}\n")
 
-# ── Load image (RAW or JPEG) ──────────────────────────────
+# ── Load image ────────────────────────────────────────────
 def load_image(path: Path):
-    ext = path.suffix.lower()
-    if ext in RAW_EXTS:
-        try:
-            with rawpy.imread(str(path)) as raw:
-                rgb = raw.postprocess(
-                    use_camera_wb=True,
-                    half_size=True,       # 2x faster, enough for scoring
-                    no_auto_bright=False,
-                    output_bps=8,
-                )
-            bgr = cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
-            pil = Image.fromarray(rgb)
-            return bgr, pil
-        except Exception:
-            return None, None
-    else:
-        try:
-            pil = Image.open(path).convert("RGB")
-            bgr = cv2.cvtColor(np.array(pil), cv2.COLOR_RGB2BGR)
-            return bgr, pil
-        except Exception:
-            return None, None
+    try:
+        pil = Image.open(path).convert("RGB")
+        bgr = cv2.cvtColor(np.array(pil), cv2.COLOR_RGB2BGR)
+        return bgr, pil
+    except Exception:
+        return None, None
 
 # ── Scoring functions (0.0 – 1.0) ────────────────────────
 face_cascade = cv2.CascadeClassifier(
@@ -165,26 +120,20 @@ WEIGHTS = {
 def composite(scores):
     return sum(WEIGHTS[k] * scores[k] for k in WEIGHTS)
 
-# ── STEP 1: Find all photos ───────────────────────────────
-print("  Scanning all sub-folders ...")
+# ── STEP 1: Find all JPEG files ───────────────────────────
+print("  Scanning all sub-folders for JPG/JPEG photos ...")
 all_files = [
     p for p in source.rglob("*")
-    if p.suffix.lower() in ALL_EXTS and p.is_file()
+    if p.suffix.lower() in SUPPORTED_EXTS and p.is_file()
 ]
-raw_count = sum(1 for p in all_files if p.suffix.lower() in RAW_EXTS)
-std_count = len(all_files) - raw_count
-
-print(f"  Found {len(all_files):,} photos total")
-print(f"  RAW files  : {raw_count:,}")
-print(f"  JPEG/other : {std_count:,}\n")
+print(f"  Found {len(all_files):,} photos\n")
 
 if not all_files:
-    print("  ERROR: No photos found. Please check your path.")
+    print("  ERROR: No JPG/JPEG photos found. Please check your path.")
     input("  Press Enter to close...")
     sys.exit(1)
 
-# ── Time estimate ─────────────────────────────────────────
-est_mins = int((raw_count * 2 + std_count * 0.5) / 60) + 1
+est_mins = max(1, int(len(all_files) * 0.5 / 60))
 print(f"  Estimated time: ~{est_mins} minutes")
 print(f"  Please do NOT close this window.\n")
 
@@ -219,7 +168,6 @@ for path in tqdm(all_files, unit="photo", ncols=60, colour="cyan"):
     rec = {
         "file"  : path,
         "score" : round(total, 4),
-        "ext"   : path.suffix.lower(),
         **{k: round(v, 3) for k, v in scores.items()},
         "phash" : ph,
     }
@@ -239,7 +187,6 @@ dupes_out = len(all_files) - errors - unique
 
 print(f"\n  Done scoring!")
 print(f"  Total scanned      : {len(all_files):,}")
-print(f"  RAW files          : {raw_count:,}")
 print(f"  Duplicates removed : {dupes_out:,}")
 print(f"  Unreadable skipped : {errors:,}")
 print(f"  Unique photos ranked: {unique:,}\n")
@@ -254,8 +201,7 @@ for rank, rec in enumerate(
     src  = rec["file"]
     rstr = str(rank).zfill(pad)
     sstr = str(int(rec["score"] * 100)).zfill(3)
-    safe = src.name.replace(":", "-").replace("*", "-").replace("?", "-")
-    dest = OUTPUT_DIR / f"Rank_{rstr}_Score{sstr}_{safe}"
+    dest = OUTPUT_DIR / f"Rank_{rstr}_Score{sstr}_{src.name}"
     try:
         shutil.copy2(src, dest)
     except Exception as e:
@@ -268,19 +214,17 @@ with open(report, "w", encoding="utf-8") as f:
     f.write(f"Generated : {datetime.now():%Y-%m-%d %H:%M}\n")
     f.write(f"Source    : {source}\n")
     f.write(f"Total     : {unique} unique photos ranked\n")
-    f.write(f"RAW files : {raw_count}   JPEG/other: {std_count}\n")
     f.write(f"Duplicates removed: {dupes_out}\n")
-    f.write("=" * 68 + "\n\n")
+    f.write("=" * 65 + "\n\n")
     f.write(f"{'Rank':<6} {'Score':>6}  {'Sharp':>6} {'Expo':>6} "
-            f"{'Faces':>6} {'Color':>6} {'Cont':>6}  {'Ext':>5}  File\n")
-    f.write("-" * 68 + "\n")
+            f"{'Faces':>6} {'Color':>6} {'Cont':>6}  File\n")
+    f.write("-" * 65 + "\n")
     for rank, rec in enumerate(records, 1):
         f.write(
             f"{rank:<6} {rec['score']:>6.3f}  "
             f"{rec['sharpness']:>6.2f} {rec['exposure']:>6.2f} "
             f"{rec['faces']:>6.2f} {rec['color']:>6.2f} "
-            f"{rec['contrast']:>6.2f}  {rec['ext']:>5}  "
-            f"{rec['file'].name}\n"
+            f"{rec['contrast']:>6.2f}  {rec['file'].name}\n"
         )
 
 # ── STEP 6: HTML gallery (top 200) ───────────────────────
@@ -291,20 +235,11 @@ cards   = ""
 for rank, rec in enumerate(top, 1):
     rstr  = str(rank).zfill(pad)
     sstr  = str(int(rec["score"] * 100)).zfill(3)
-    safe  = rec["file"].name.replace(":", "-").replace("*", "-").replace("?", "-")
-    fname = f"Rank_{rstr}_Score{sstr}_{safe}"
-    ext   = rec["ext"]
-    tag   = "RAW" if ext in RAW_EXTS else "JPG"
-    tag_c = "#ffcc02" if tag == "RAW" else "#80cbc4"
+    fname = f"Rank_{rstr}_Score{sstr}_{rec['file'].name}"
     cards += f"""
   <div class="card">
     <div class="rank">#{rank}</div>
-    <div class="tag" style="background:{tag_c};color:#111">{ext.upper()}</div>
-    <img src="{fname}" alt="rank {rank}" loading="lazy"
-         onerror="this.style.display='none';this.nextSibling.style.display='flex'">
-    <div class="raw-ph" style="display:none">
-      <div>RAW File<br><small>{ext.upper()}</small></div>
-    </div>
+    <img src="{fname}" alt="rank {rank}" loading="lazy">
     <div class="info">
       <span class="score">Score: {rec['score']:.3f}</span>
       <span class="bars">
@@ -331,12 +266,8 @@ h1{{text-align:center;color:#f9d5e5;font-size:1.8rem;margin-bottom:4px}}
 .card{{background:#1a1a1a;border-radius:12px;overflow:hidden;position:relative;transition:transform .15s}}
 .card:hover{{transform:translateY(-3px)}}
 .rank{{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.8);color:#ffcc02;
-       font-weight:800;font-size:.8rem;padding:3px 10px;border-radius:20px;z-index:2}}
-.tag{{position:absolute;top:8px;right:8px;font-size:.65rem;font-weight:700;
-      padding:2px 8px;border-radius:10px;z-index:2}}
+       font-weight:800;font-size:.8rem;padding:3px 10px;border-radius:20px}}
 .card img{{width:100%;height:185px;object-fit:cover;display:block}}
-.raw-ph{{width:100%;height:185px;background:#1e1e1e;align-items:center;
-         justify-content:center;text-align:center;color:#666;font-size:.85rem;line-height:1.8}}
 .info{{padding:10px 12px}}
 .score{{display:block;font-size:.82rem;color:#c9a0dc;font-weight:700;margin-bottom:4px}}
 .bars{{display:block;font-size:.7rem;color:#888;margin-bottom:4px}}
@@ -345,8 +276,7 @@ h1{{text-align:center;color:#f9d5e5;font-size:1.8rem;margin-bottom:4px}}
 </head>
 <body>
 <h1>&#128141; Wedding Photos &mdash; Best {len(top)} of {unique}</h1>
-<p class="sub">Ranked by Focus &bull; Lighting &bull; Faces &bull; Color &bull; Contrast
-&nbsp;&mdash;&nbsp; RAW files: open with Lightroom for full preview</p>
+<p class="sub">Ranked by Focus &bull; Lighting &bull; Faces &bull; Color &bull; Contrast</p>
 <div class="grid">{cards}
 </div>
 </body>
